@@ -30,7 +30,8 @@ class Camera:
         """카메라 초기화"""
         try:
             device = self.config['device']
-            self.cap = cv2.VideoCapture(device)
+            # V4L2 백엔드 직접 지정
+            self.cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
             
             if not self.cap.isOpened():
                 self.logger.error(f"카메라 {device}를 열 수 없습니다.")

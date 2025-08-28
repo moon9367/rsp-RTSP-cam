@@ -9,8 +9,8 @@ def test_camera(device_path, camera_name):
     """개별 카메라 테스트"""
     print(f"\n🔍 {camera_name} 테스트 중... ({device_path})")
     
-    # 카메라 열기
-    cap = cv2.VideoCapture(device_path)
+    # 카메라 열기 (V4L2 백엔드 직접 지정)
+    cap = cv2.VideoCapture(device_path, cv2.CAP_V4L2)
     
     if not cap.isOpened():
         print(f"❌ {camera_name}를 열 수 없습니다.")

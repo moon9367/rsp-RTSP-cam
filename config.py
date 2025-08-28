@@ -12,7 +12,7 @@ class Config:
         self.cameras = {
             'camera1': {
                 'name': 'Arducam 1',
-                'device': '/dev/video0',
+                'device': '/dev/video1',
                 'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8554,
@@ -30,7 +30,7 @@ class Config:
             },
             'camera3': {
                 'name': 'Arducam 3',
-                'device': '/dev/video8',
+                'device': '/dev/video9',
                 'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8556,

@@ -71,9 +71,9 @@ def main():
     
     # 테스트할 카메라 목록
     cameras = [
-        ('/dev/video0', 'Arducam 1'),
+        ('/dev/video1', 'Arducam 1'),
         ('/dev/video4', 'Arducam 2'),
-        ('/dev/video8', 'Arducam 3'),
+        ('/dev/video9', 'Arducam 3'),
         ('/dev/video12', 'Arducam 4')
     ]
     

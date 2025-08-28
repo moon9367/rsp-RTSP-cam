@@ -42,8 +42,13 @@ class Camera:
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             self.cap.set(cv2.CAP_PROP_FPS, self.config['fps'])
             
-            # 버퍼 크기 설정
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            # 버퍼 크기 설정 (더 큰 버퍼)
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+            
+            # 추가 카메라 설정
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+            self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # Manual mode
             
             self.logger.info(f"카메라 {self.config['name']} 초기화 완료")
             return True

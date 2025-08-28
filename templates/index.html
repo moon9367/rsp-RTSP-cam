@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>라즈베리파이 RTSP 웹캠 관리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .status-bar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .status-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-item .value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .control-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .camera-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .camera-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .camera-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-online {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-offline {
+            background: #f44336;
+            color: white;
+        }
+        
+        .camera-video {
+            width: 100%;
+            height: 250px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .camera-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .rtsp-info {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .rtsp-urls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .rtsp-url {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .rtsp-url h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .rtsp-url input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #4CAF50;
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+            }
+            
+            .cameras-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .camera-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔴 라즈베리파이 RTSP 웹캠 관리</h1>
+            <p>4대의 웹캠을 RTSP 스트림으로 변환하여 관리합니다</p>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-grid">
+                <div class="status-item">
+                    <h3>전체 카메라</h3>
+                    <div class="value" id="total-cameras">0</div>
+                </div>
+                <div class="status-item">
+                    <h3>활성 카메라</h3>
+                    <div class="value" id="active-cameras">0</div>
+                </div>
+                <div class="status-item">
+                    <h3>RTSP 스트림</h3>
+                    <div class="value" id="rtsp-streams">0</div>
+                </div>
+                <div class="status-item">
+                    <h3>시스템 상태</h3>
+                    <div class="value" id="system-status">정상</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">📹 전체 제어</h2>
+            <div class="control-buttons">
+                <button class="btn btn-success" onclick="startAllCameras()">모든 카메라 시작</button>
+                <button class="btn btn-danger" onclick="stopAllCameras()">모든 카메라 중지</button>
+                <button class="btn btn-primary" onclick="refreshStatus()">상태 새로고침</button>
+            </div>
+        </div>
+        
+        <div class="cameras-grid" id="cameras-grid">
+            <!-- 카메라 카드들이 여기에 동적으로 생성됩니다 -->
+        </div>
+        
+        <div class="rtsp-info">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">🔗 RTSP 스트림 정보</h2>
+            <div class="rtsp-urls" id="rtsp-urls">
+                <!-- RTSP URL들이 여기에 동적으로 생성됩니다 -->
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>처리 중...</p>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // 전역 변수
+        let cameras = {};
+        let rtspUrls = {};
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+            // 5초마다 상태 자동 새로고침
+            setInterval(refreshStatus, 5000);
+        });
+        
+        // 상태 새로고침
+        async function refreshStatus() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.error) {
+                    showNotification('상태 조회 실패: ' + data.error, 'error');
+                    return;
+                }
+                
+                updateStatusDisplay(data);
+                updateCamerasDisplay(data.cameras);
+                updateRTSPUrls();
+                
+            } catch (error) {
+                showNotification('상태 조회 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 상태 표시 업데이트
+        function updateStatusDisplay(data) {
+            document.getElementById('total-cameras').textContent = data.system.cameras;
+            document.getElementById('rtsp-streams').textContent = data.system.rtsp_streams;
+            
+            const activeCameras = Object.values(data.cameras).filter(cam => cam.is_running).length;
+            document.getElementById('active-cameras').textContent = activeCameras;
+            
+            const systemStatus = activeCameras > 0 ? '정상' : '경고';
+            document.getElementById('system-status').textContent = systemStatus;
+        }
+        
+        // 카메라 표시 업데이트
+        function updateCamerasDisplay(camerasData) {
+            cameras = camerasData;
+            const grid = document.getElementById('cameras-grid');
+            grid.innerHTML = '';
+            
+            Object.entries(camerasData).forEach(([cameraId, camera]) => {
+                const card = createCameraCard(cameraId, camera);
+                grid.appendChild(card);
+            });
+        }
+        
+        // 카메라 카드 생성
+        function createCameraCard(cameraId, camera) {
+            const card = document.createElement('div');
+            card.className = 'camera-card';
+            
+            const statusClass = camera.is_running ? 'status-online' : 'status-offline';
+            const statusText = camera.is_running ? '온라인' : '오프라인';
+            
+            card.innerHTML = `
+                <div class="camera-header">
+                    <div class="camera-name">${camera.name}</div>
+                    <div class="camera-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="camera-video" id="video-${cameraId}">
+                    ${camera.is_running ? '스트림 로딩 중...' : '카메라가 중지됨'}
+                </div>
+                <div class="camera-info">
+                    <div class="info-item">
+                        <div class="info-label">해상도</div>
+                        <div class="info-value">${camera.resolution[0]}x${camera.resolution[1]}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">FPS</div>
+                        <div class="info-value">${camera.fps || 0}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">장치</div>
+                        <div class="info-value">${camera.device}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">연결 상태</div>
+                        <div class="info-value">${camera.is_connected ? '연결됨' : '연결 안됨'}</div>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-small btn-success" onclick="startCamera('${cameraId}')" ${camera.is_running ? 'disabled' : ''}>
+                        시작
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="stopCamera('${cameraId}')" ${!camera.is_running ? 'disabled' : ''}>
+                        중지
+                    </button>
+                    <button class="btn btn-small btn-primary" onclick="restartCamera('${cameraId}')">
+                        재시작
+                    </button>
+                </div>
+            `;
+            
+            // 비디오 스트림 설정
+            if (camera.is_running) {
+                setTimeout(() => {
+                    setupVideoStream(cameraId);
+                }, 1000);
+            }
+            
+            return card;
+        }
+        
+        // 비디오 스트림 설정
+        function setupVideoStream(cameraId) {
+            const videoContainer = document.getElementById(`video-${cameraId}`);
+            if (!videoContainer) return;
+            
+            // MJPEG 스트림으로 비디오 표시
+            const img = document.createElement('img');
+            img.src = `/api/cameras/${cameraId}/stream`;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '10px';
+            
+            videoContainer.innerHTML = '';
+            videoContainer.appendChild(img);
+        }
+        
+        // RTSP URL 업데이트
+        async function updateRTSPUrls() {
+            try {
+                const response = await fetch('/api/rtsp/urls');
+                const data = await response.json();
+                
+                if (data.success) {
+                    rtspUrls = data.urls;
+                    displayRTSPUrls();
+                }
+            } catch (error) {
+                console.error('RTSP URL 조회 오류:', error);
+            }
+        }
+        
+        // RTSP URL 표시
+        function displayRTSPUrls() {
+            const container = document.getElementById('rtsp-urls');
+            container.innerHTML = '';
+            
+            Object.entries(rtspUrls).forEach(([cameraId, url]) => {
+                const urlDiv = document.createElement('div');
+                urlDiv.className = 'rtsp-url';
+                
+                const cameraName = cameras[cameraId]?.name || cameraId;
+                
+                urlDiv.innerHTML = `
+                    <h4>${cameraName}</h4>
+                    <input type="text" value="${url}" readonly onclick="this.select()">
+                `;
+                
+                container.appendChild(urlDiv);
+            });
+        }
+        
+        // 카메라 시작
+        async function startCamera(cameraId) {
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/cameras/${cameraId}/start`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(refreshStatus, 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('카메라 시작 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 카메라 중지
+        async function stopCamera(cameraId) {
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/cameras/${cameraId}/stop`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(refreshStatus, 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('카메라 중지 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 카메라 재시작
+        async function restartCamera(cameraId) {
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/cameras/${cameraId}/restart`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(refreshStatus, 2000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('카메라 재시작 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 모든 카메라 시작
+        async function startAllCameras() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/cameras/start_all', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(refreshStatus, 2000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('카메라 시작 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 모든 카메라 중지
+        async function stopAllCameras() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/cameras/stop_all', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(refreshStatus, 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('카메라 중지 오류: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 로딩 표시
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        // 알림 표시
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

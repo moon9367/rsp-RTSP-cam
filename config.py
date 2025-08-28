@@ -11,36 +11,36 @@ class Config:
         # 웹캠 설정
         self.cameras = {
             'camera1': {
-                'name': '웹캠 1',
+                'name': 'Arducam 1',
                 'device': '/dev/video0',
-                'resolution': (640, 480),
+                'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8554,
                 'rtsp_path': '/camera1',
                 'enabled': True
             },
             'camera2': {
-                'name': '웹캠 2', 
-                'device': '/dev/video1',
-                'resolution': (640, 480),
+                'name': 'Arducam 2', 
+                'device': '/dev/video4',
+                'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8555,
                 'rtsp_path': '/camera2',
                 'enabled': True
             },
             'camera3': {
-                'name': '웹캠 3',
-                'device': '/dev/video2',
-                'resolution': (640, 480),
+                'name': 'Arducam 3',
+                'device': '/dev/video8',
+                'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8556,
                 'rtsp_path': '/camera3',
                 'enabled': True
             },
             'camera4': {
-                'name': '웹캠 4',
-                'device': '/dev/video3',
-                'resolution': (640, 480),
+                'name': 'Arducam 4',
+                'device': '/dev/video12',
+                'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8557,
                 'rtsp_path': '/camera4',

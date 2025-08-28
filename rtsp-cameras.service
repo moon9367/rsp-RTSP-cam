@@ -5,24 +5,24 @@ Wants=network.target
 
 [Service]
 Type=simple
-User=pi
-Group=pi
-WorkingDirectory=/home/pi/rsp-rtsp-cam
-ExecStart=/usr/bin/python3 /home/pi/rsp-rtsp-cam/main.py
+User=tspol
+Group=tspol
+WorkingDirectory=/home/tspol/rsp-RTSP-cam
+ExecStart=/usr/bin/python3 /home/tspol/rsp-RTSP-cam/main.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 # 환경 변수 설정
-Environment=PYTHONPATH=/home/pi/rsp-rtsp-cam
+Environment=PYTHONPATH=/home/tspol/rsp-RTSP-cam
 Environment=DISPLAY=:0
 
 # 보안 설정
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=/home/pi/rsp-rtsp-cam
+ReadWritePaths=/home/tspol/rsp-RTSP-cam
 
 # 리소스 제한
 LimitNOFILE=65536

@@ -52,7 +52,7 @@ class Camera:
             self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # Manual mode
             
             # 카메라 안정화를 위한 대기
-            time.sleep(1)
+            time.sleep(3)  # 1초 → 3초로 증가
             
             # 초기 프레임 읽기 테스트
             ret, test_frame = self.cap.read()
@@ -196,7 +196,7 @@ class CameraManager:
                     success_count += 1
                     self.logger.info(f"카메라 {camera_id} 시작 성공")
                     # 카메라 간 간격을 두어 USB 대역폭 분산
-                    time.sleep(2)
+                    time.sleep(5)  # 2초 → 5초로 증가
                 else:
                     self.logger.error(f"카메라 {camera_id} 시작 실패")
             

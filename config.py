@@ -8,38 +8,38 @@ class Config:
     """라즈베리파이 RTSP 웹캠 설정 클래스"""
     
     def __init__(self):
-        # 웹캠 설정
+        # 웹캠 설정 (USB 대역폭 최적화 순서)
         self.cameras = {
             'camera1': {
                 'name': 'Arducam 1',
-                'device': '/dev/video1',
+                'device': '/dev/video1',  # Bus 003 - 먼저 시작
                 'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8554,
                 'rtsp_path': '/camera1',
                 'enabled': True
             },
-            'camera2': {
-                'name': 'Arducam 2', 
-                'device': '/dev/video4',
-                'resolution': (1280, 720),
-                'fps': 30,
-                'rtsp_port': 8555,
-                'rtsp_path': '/camera2',
-                'enabled': True
-            },
             'camera3': {
                 'name': 'Arducam 3',
-                'device': '/dev/video9',
+                'device': '/dev/video9',  # Bus 003 - 두 번째 시작
                 'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8556,
                 'rtsp_path': '/camera3',
                 'enabled': True
             },
+            'camera2': {
+                'name': 'Arducam 2', 
+                'device': '/dev/video4',  # Bus 001 - 나중에 시작
+                'resolution': (1280, 720),
+                'fps': 30,
+                'rtsp_port': 8555,
+                'rtsp_path': '/camera2',
+                'enabled': True
+            },
             'camera4': {
                 'name': 'Arducam 4',
-                'device': '/dev/video12',
+                'device': '/dev/video12',  # Bus 001 - 마지막 시작
                 'resolution': (1280, 720),
                 'fps': 30,
                 'rtsp_port': 8557,

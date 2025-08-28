@@ -43,12 +43,26 @@ class Camera:
             self.cap.set(cv2.CAP_PROP_FPS, self.config['fps'])
             
             # 버퍼 크기 설정 (더 큰 버퍼)
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 5)
             
             # 추가 카메라 설정
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
             self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # Manual mode
+            
+            # 카메라 안정화를 위한 대기
+            time.sleep(1)
+            
+            # 초기 프레임 읽기 테스트
+            ret, test_frame = self.cap.read()
+            if not ret:
+                self.logger.warning(f"카메라 {self.config['name']} 초기 프레임 읽기 실패")
+                # 재시도
+                time.sleep(2)
+                ret, test_frame = self.cap.read()
+                if not ret:
+                    self.logger.error(f"카메라 {self.config['name']} 재시도 후에도 프레임 읽기 실패")
+                    return False
             
             self.logger.info(f"카메라 {self.config['name']} 초기화 완료")
             return True
@@ -76,31 +90,38 @@ class Camera:
         self.logger.info(f"카메라 {self.config['name']} 스트리밍 중지")
     
     def get_frame(self) -> Optional[np.ndarray]:
-        """현재 프레임 반환"""
+        """현재 프레임 반환 (재시도 로직 포함)"""
         if not self.is_running or self.cap is None:
             return None
         
         try:
-            ret, frame = self.cap.read()
-            if ret:
-                # FPS 계산
-                current_time = time.time()
-                self.frame_count += 1
-                
-                if current_time - self.fps_start_time >= 1.0:
-                    self.fps_counter = self.frame_count
-                    self.frame_count = 0
-                    self.fps_start_time = current_time
-                
-                # 프레임 정보 오버레이
-                frame_with_info = self.add_frame_info(frame)
-                self.frame_buffer = frame_with_info
-                self.last_frame_time = current_time
-                
-                return frame_with_info
-            else:
-                self.logger.warning(f"카메라 {self.config['name']}에서 프레임을 읽을 수 없습니다.")
-                return None
+            # 최대 3번 재시도
+            for attempt in range(3):
+                ret, frame = self.cap.read()
+                if ret:
+                    # FPS 계산
+                    current_time = time.time()
+                    self.frame_count += 1
+                    
+                    if current_time - self.fps_start_time >= 1.0:
+                        self.fps_counter = self.frame_count
+                        self.frame_count = 0
+                        self.fps_start_time = current_time
+                    
+                    # 프레임 정보 오버레이
+                    frame_with_info = self.add_frame_info(frame)
+                    self.frame_buffer = frame_with_info
+                    self.last_frame_time = current_time
+                    
+                    return frame_with_info
+                else:
+                    if attempt < 2:  # 마지막 시도가 아니면
+                        self.logger.warning(f"카메라 {self.config['name']} 프레임 읽기 실패 (시도 {attempt + 1}/3)")
+                        time.sleep(0.1)  # 잠시 대기 후 재시도
+                        continue
+                    else:
+                        self.logger.warning(f"카메라 {self.config['name']}에서 프레임을 읽을 수 없습니다.")
+                        return None
                 
         except Exception as e:
             self.logger.error(f"프레임 읽기 오류: {e}")
@@ -165,12 +186,18 @@ class CameraManager:
                 self.logger.info(f"카메라 {camera_config['name']} 등록됨")
     
     def start_all(self) -> bool:
-        """모든 카메라 시작"""
+        """모든 카메라 시작 (순차적으로)"""
         try:
             success_count = 0
-            for camera in self.cameras.values():
+            for camera_id, camera in self.cameras.items():
+                self.logger.info(f"카메라 {camera_id} 시작 중...")
                 if camera.start():
                     success_count += 1
+                    self.logger.info(f"카메라 {camera_id} 시작 성공")
+                    # 카메라 간 간격을 두어 USB 대역폭 분산
+                    time.sleep(2)
+                else:
+                    self.logger.error(f"카메라 {camera_id} 시작 실패")
             
             self.is_running = success_count > 0
             self.logger.info(f"{success_count}/{len(self.cameras)} 카메라 시작됨")
